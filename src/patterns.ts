@@ -5,9 +5,9 @@
  * the response patterns listed (substituted where those numbers appear).
  */
 export type WordPattern = {
-  name: string;
-  contains: ReadonlyArray<string>[];  // 0, 1, 2, or 3
-  responses: ReadonlyArray<string|number>[];
+  readonly name: string;
+  readonly contains: ReadonlyArray<string>[];  // 0, 1, 2, or 3
+  readonly responses: ReadonlyArray<string|number>[];
 };
 
 

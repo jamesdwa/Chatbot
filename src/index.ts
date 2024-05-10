@@ -9,5 +9,5 @@ const app: Express = express();
 app.use(express.static('public'));
 app.use(bodyParser.json());
 app.get("/chat", chat);
-// TODO(6d): add routes for /load (GET) and /save (POST)
+// TODO(5d): add routes for /load (GET) and /save (POST)
 app.listen(port, () => console.log(`Server listening on ${port}`));

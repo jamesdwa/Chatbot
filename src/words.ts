@@ -1,38 +1,42 @@
+import { AssocList, contains_key, get_value } from "./assoc";
+
 const DEBUG: boolean = true;  // turn this to 'false' later if you want to prevent
 // the CheckInv functions from executing. For this project you don't need to change it
 // to false, but in a bigger program we might want to turn it off after debugging is
 // complete, to avoid running expensive invariant checks when the project is released.
 
 /** TODO: (part 1a) write the specification */
-export const substitute = (words: string[], reps: Map<string, string>): void => {
-  // TODO: (part 1b) implement this
+export const substitute = (words: string[], reps: AssocList<string>): void => {
+  let j = 0;
+
+  // Inv: words = substitute(words_0[0 .. j-1]) ++ words_0[j .. n-1]
+  // while () { // TODO (1b): Fill in loop body according to above invariant
+
+  // }
 };
 
 /**
- * Returns the list of words that results when each of the words in the given
+ * Returns the array of words that results when each of the words in the given
  * map is replaced by its value, which can be multiple words.
- * @param words initial list of words
+ * @param words initial array of words
  * @param replacements map from strings to their replacements
- * @returns join(map(words, replacement)),
- *     where map(nil, reps) = nil
- *           map(cons(w, L), reps)) = reps.get(w) if w in reps
- *                                  = [w]         if w not in reps
- *     where join([]) = []
- *           join(L @ []) = join(L)
- *           join(L @ [S @ [w]]) = join(L @ S) @ [w]
+ * @returns concat(replace(words, replacement))
+ *     where concat([]) = []
+ *           concat(L @ [[]]) = concat(L)
+ *           concat(L @ [S @ [w]]) = concat(L @ [S]) @ [w]
  */
 export const replaceWords =
     (words: ReadonlyArray<string>,
-     replacements: Map<string, ReadonlyArray<string>>): string[] => {
+     replacements: AssocList<string[]>): string[] => {
 
   const replaced: ReadonlyArray<string>[] = [];
   let i = 0;
 
-  // Inv: replaced[0..i-1] = map(words[0..i-1], replacements) and
+  // Inv: replaced[0..i-1] = replace(words[0..i-1], replacements) and
   //      replaced[i..n-1] is unchanged
   while (i !== words.length) {
-    const val = replacements.get(words[i]);
-    if (val !== undefined) {
+    if (contains_key(words[i], replacements)) {
+      const val = get_value(words[i], replacements);
       replaced.push(val);
     } else {
       replaced.push([words[i]]);
@@ -43,11 +47,11 @@ export const replaceWords =
   const result: string[] = [];
   let j = 0;
 
-  // Inv: result = join(replaced[0..j-1])
+  // Inv: result = concat(replaced[0..j-1])
   while (j !== replaced.length) {
     const L = replaced[j];
     let k = 0;
-    // Inv: result = join(replaced[0..j-1]) @ L[0..k-1]
+    // Inv: result = concat(replaced[0..j-1]) @ L[0..k-1]
     while (k !== L.length) {
       result.push(L[k])
       k = k + 1;
@@ -82,18 +86,19 @@ const isPunct = (ch: string): boolean => {
  *     4. each word is either a single punctuation character or 1+ letters
  */
 export const splitWords = (str: string): string[] => {
-  let splits: number[] = [];  // TODO (part a): fix this
-  let j: number = 9;          // TODO (part a): fix this
+  let splits: number[] = [];  // TODO (part 3a): fix this
+  let j: number = 9;          // TODO (part 3a): fix this
 
   CheckInv1(splits, str, j);
 
   // Inv: 1. 0 = splits[0] < splits[1] < ... < splits[n-1] = j
   //      2. for i = 0 .. n-1, if splits[i+1] - splits[i] > 1, then 
   //         str[splits[i] ..  splits[i+1]-1] is all letters
-  //      3. for i = 1 .. n-1, splits[i] is not between two letters
+  //      3. for i = 1 .. n-2, splits[i] is not between two letters
   //  where n = splits.length
-  while (j !== 9) {  // TODO (part 5a): fix this
-    // TODO (part 5a): implement this
+  while (j !== 9) {  // TODO (part 3a): fix this loop condition
+    // TODO (part 3a): implement loop body here
+
     CheckInv1(splits, str, j);
   }
 
@@ -126,14 +131,16 @@ const CheckInv1 = (splits: number[], str: string, j: number): void => {
   if (splits[splits.length-1] !== j)
     throw new Error(`splits should end with the string's length ${j}`);
 
-  const n = splits.length - 1;
+  const n = splits.length;
   // Inv: checked the invariant for splits[0 .. i-1]
   for (let i = 0; i < n; i++) {
+    // Part 1:
     if (splits[i+1] - splits[i] <= 0)
       throw new Error(`should have at least 1 char between splits at ${splits[i]} and ${splits[i+1]}`);
 
-    const w = str.substring(splits[i], splits[i+1]);
-    if (w.length > 1) {
+    // Part 2:
+    if (splits[i+1] - splits[i] > 1) {  
+      const w = str.substring(splits[i], splits[i+1]);
       // Inv: w[0 .. j-1] is all letters
       for (let j = 0; j < w.length; j++) {
         if (w[j] === " " || isPunct(w[j]))
@@ -141,7 +148,8 @@ const CheckInv1 = (splits: number[], str: string, j: number): void => {
       }
     } 
 
-    if (i > 0) {
+    // Part 3:
+    if (i > 0 && i < n - 1) {
       const c1 = str[splits[i]-1];
       const c2 = str[splits[i]];
       if ((c1 !== " ") && !isPunct(c1) && (c2 !== " ") && !isPunct(c2))
@@ -216,16 +224,26 @@ export const wordsContain =
  * Returns a string containing all of the given words, in the same order, but
  * with spaces before each (non-punctuation) word other than the first.
  * @param words list of words (no spaces, punctuation as its own words)
- * @return join-words(words), where 
- *     join-words([]) = ""
- *     join-words([w]) = w
- *     join-words(L @ [v, w]) =
- *         join-words(L @ [v]) + w        if w is punctuation
- *         join-words(L @ [v]) + " " + w  if w is not punctuation
+ * @return to-string(words), where 
+ *     to-string([]) = []
+ *     to-string([w]) = w
+ *     to-string(L @ [v, w]) =
+ *         to-string(L @ [v]) + w        if w is punctuation
+ *         to-string(L @ [v]) + " " + w  if w is not punctuation
  */
-export const joinWords = (words: ReadonlyArray<string>): string => {
-  // TODO (part 4a): handle the case when the array is empty
-
-  // TODO (part 4b): write a loop for the case when the array is not empty
-  return "wrong answer";
+export const toString = (words: ReadonlyArray<string>): string => {
+  if (words.length === 0) {
+    return "";
+  } else if (words.length == 1) {
+    return words[0];
+  } else {
+    const w = words[words.length - 1]
+    if (w.length === 1 && isPunct(w)) {
+      const rest = toString(words.slice(0, words.length - 1));
+      return rest + w;
+    } else {
+      const rest = toString(words.slice(0, words.length - 1));
+      return rest + " " + w;
+    }
+  }
 };

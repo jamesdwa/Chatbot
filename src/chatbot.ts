@@ -1,9 +1,40 @@
 import { replaceWords, wordsContain } from './words';
 import { WordPattern } from './patterns'
+import { AssocList, contains_key, get_value } from './assoc';
+import { explode_array, nil, cons } from './list';
+
+// TODO: for every instance of "TODO: update" in this file, replace the
+// following line with a call to LastUsed.X, where X is the method of your
+// mutable map ADT with the same behavior
+
+// TODO: update to use your mutable map ADT by calling  factory function
+let LastUsed: AssocList<string> = nil;
+
+/**
+ * Gets the value for the given key in LastUsed 
+ * (exported ONLY for testing)
+ * @param key to get the corresponding value of in LastUsed map, must be in map
+ * @returns value paired with key in LastUsed map
+ */
+export const getInLastUsedForTesting = (key: string): unknown => {
+  // TODO: update
+  return get_value(key, LastUsed);
+}
+
+/**
+ * Clears LastUsed for testing 
+ * (exported ONLY for testing)
+ */
+export const clearLastUsedForTesting = (): void => {
+  // TODO: update
+  LastUsed = nil;
+}
+
 
 
 // List of replacements to make in the input words.
-const INPUT_REPLACEMENTS: Map<string, string[]> = new Map([
+const INPUT_REPLACEMENTS: AssocList<string[]> = 
+  explode_array([
     ["dont", ["don't"]],
     ["cant", ["can't"]],
     ["wont", ["won't"]],
@@ -24,7 +55,8 @@ const INPUT_REPLACEMENTS: Map<string, string[]> = new Map([
 
 
 // List of replacements to make in the output words.
-const OUTPUT_REPLACEMENTS: Map<string, string[]> = new Map([
+const OUTPUT_REPLACEMENTS: AssocList<string[]> = 
+  explode_array([
     ["am", ["are"]],
     ["your", ["my"]],
     ["me", ["you"]],
@@ -53,14 +85,13 @@ const DEFAULT_PATTERN: WordPattern = {
 /**
  * Returns the next response from the chatbot.
  * @param words words in the user's message
- * @param lastUsed map from name to the last response used for that word.
- *     (This is kept so that we can avoid reusing them as much as possible.)
+ * @param memory
  * @param patterns set of word patterns to use
- * @modifies lastUsed, memory
+ * @modifies memory
  * @returns words of the response
  */
 export const chatResponse = 
-    (words: string[], lastUsed: Map<string, number>, memory: string[][],
+    (words: string[], memory: string[][],
     patterns: ReadonlyArray<WordPattern>): string[] => {
 
   // Start by making the substitutions listed above.
@@ -75,7 +106,7 @@ export const chatResponse =
       const out_args = [];
       for (const arg of args)
         out_args.push(replaceWords(arg, OUTPUT_REPLACEMENTS));
-      const result = applyPattern(pat, out_args, lastUsed);
+      const result = applyPattern(pat, out_args);
       if (pat.name === "my") {
         memory.push(result); 
       } else {
@@ -90,7 +121,7 @@ export const chatResponse =
   if (result !== undefined) {
     return result;
   } else {
-    return applyPattern(DEFAULT_PATTERN, [], lastUsed);
+    return applyPattern(DEFAULT_PATTERN, []);
   }
 };
 
@@ -142,23 +173,30 @@ export const matchPattern =
  * Returns the next response applied to the given pattern
  * @param pat pattern that matches
  * @param args arguments from matching the pattern
- * @param lastUsed (see chatResponse)
- * @modifies lastUsed changes the entry for this pattern to indicate which
+ * @modifies LastUsed
+ * @effects changes the entry for this pattern in LastUsed to indicate which
  *    response was used
  * @returns result of substituting the arguments into the next unused response
  */
 export const applyPattern =
-    (pat: WordPattern, args: string[][], lastUsed: Map<string, number>):
+    (pat: WordPattern, args: string[][]):
     string[] => {
-  const last = lastUsed.get(pat.name);
   let result: string[] = [];
-  if (last !== undefined) {
-    const next = (last + 1) % pat.responses.length;
+  // TODO: update
+  if (contains_key(pat.name, LastUsed)) {
+    // TODO: update
+    const last = get_value(pat.name, LastUsed);
+    
+    const next = (parseInt(String(last)) + 1) % pat.responses.length;
     result = assemble(pat.responses[next], args);
-    lastUsed.set(pat.name, next);
+
+    // TODO: update
+    LastUsed = cons([pat.name, next + ""], LastUsed);
   } else {
     result = assemble(pat.responses[0], args);
-    lastUsed.set(pat.name, 0);
+
+    // TODO: update
+    LastUsed = cons([pat.name, "0"], LastUsed);
   }
   return result;
 };

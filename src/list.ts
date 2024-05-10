@@ -1,10 +1,10 @@
 export type List<A> =
-    | "nil"
+    | {readonly kind: "nil"}
     | {readonly kind: "cons", readonly hd: A, readonly tl: List<A>};
 
 
 /** The empty list. */
-export const nil: "nil" = "nil";
+export const nil: {kind: "nil"} = {kind: "nil"};
 
 /** Returns a list with hd in front of tl. */
 export const cons = <A,>(hd: A, tl: List<A>): List<A> => {
@@ -17,11 +17,11 @@ export const cons = <A,>(hd: A, tl: List<A>): List<A> => {
  * @param L list whose length should be returned
  * @returns 0 if L = nil else 1 + len(tail(L))
  */
-export const len = <A,>(L: List<A>): number => {
-  if (L === nil) {
-    return 0;
+export const len = <A,>(L: List<A>): bigint => {
+  if (L.kind === "nil") {
+    return 0n;
   } else {
-    return 1 + len(L.tl);
+    return 1n + len(L.tl);
   }
 };
 
@@ -34,9 +34,9 @@ export const len = <A,>(L: List<A>): number => {
  *     indexes of the two lists have values that are ===.
  */
 export const equal = <A>(L: List<A>, R: List<A>): boolean => {
-  if (L === nil) {
-    return R === nil;
-  } else if (R === nil) {
+  if (L.kind === "nil") {
+    return R.kind === "nil";
+  } else if (R.kind === "nil") {
     return false;
   } else if (L.hd !== R.hd) {
     return false;
@@ -52,7 +52,7 @@ export const equal = <A>(L: List<A>, R: List<A>): boolean => {
  * @returns A single list consisting of L's elements followed by R's
  */
 export const concat = <A,>(L: List<A>, R: List<A>): List<A> => {
-  if (L === nil) {
+  if (L.kind === "nil") {
     return R;
   } else {
     return cons(L.hd, concat(L.tl, R));
@@ -60,17 +60,17 @@ export const concat = <A,>(L: List<A>, R: List<A>): List<A> => {
 };
 
 /**
- * Returns the element at index n in the list.
- * @param n an integer between 0 and len(L) - 1 inclusie
- * @returns L.hd if n is 0 else at(n - 1, L.tl)
+ * Returns the element at index x in the list.
+ * @param x an integer between 0 and len(L) - 1 inclusie
+ * @returns L.hd if x is 0 else at(x - 1, L.tl)
  */
-export const at = <A,>(n: number, L: List<A>): A => {
-  if (L === nil) {
+export const at = <A,>(x: bigint, L: List<A>): A => {
+  if (L.kind === "nil") {
     throw new Error('no element at that index');
-  } else if (n === 0) {
+  } else if (x === 0n) {
     return L.hd;
   } else {
-    return at(n - 1, L.tl);
+    return at(x - 1n, L.tl);
   }
 };
 
@@ -80,7 +80,7 @@ export const at = <A,>(n: number, L: List<A>): A => {
  * @returns list containing the same elements but in reverse order
  */
 export const rev = <A>(L: List<A>): List<A> => {
-  if (L === nil) {
+  if (L.kind === "nil") {
     return nil;
   } else {
     return concat(rev(L.tl), cons(L.hd, nil));
@@ -93,7 +93,7 @@ export const rev = <A>(L: List<A>): List<A> => {
  * @returns array containing the same elements as in L in the same order
  */
 export const compact_list = <A,>(L: List<A>): Array<A> => {
-  if (L === nil) {
+  if (L.kind === "nil") {
     return [];
   } else {
     return [L.hd].concat(compact_list(L.tl));  // NOTE: O(n^2)

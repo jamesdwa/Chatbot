@@ -1,7 +1,6 @@
 import * as assert from 'assert';
 import { WordPattern } from './patterns';
-import { chatResponse, applyPattern, matchPattern, assemble } from './chatbot';
-
+import { chatResponse, applyPattern, matchPattern, assemble, getInLastUsedForTesting, clearLastUsedForTesting } from './chatbot';
 
 describe('chatbot', function() {
 
@@ -38,6 +37,8 @@ describe('chatbot', function() {
     assert.deepStrictEqual(
         matchPattern(words3, [['b', 'c'], ['e', 'f'], ['g', 'h']]),
         [['a'], ['d'], [], ['i', 'j']]);
+
+    clearLastUsedForTesting();
   });
 
   const PATTERNS: WordPattern[] = [
@@ -56,80 +57,73 @@ describe('chatbot', function() {
     ];
 
 
-  it('applyPattern', function() {
-    const used = new Map<string, number>();
+  it('applyPattern', function() {    
     assert.deepStrictEqual(
-        applyPattern(PATTERNS[0], [['arg0'], ['arg1']], used),
+        applyPattern(PATTERNS[0], [['arg0'], ['arg1']]),
         ['why', 'arg0', 'and', 'not', 'arg1']);
-    assert.strictEqual(used.size, 1)
-    assert.strictEqual(used.get("foo"), 0);
+    assert.deepStrictEqual(getInLastUsedForTesting("foo"), "0");
 
     assert.deepStrictEqual(
-        applyPattern(PATTERNS[0], [['arg0'], ['arg1']], used),
+        applyPattern(PATTERNS[0], [['arg0'], ['arg1']]),
         ['arg0', ',', 'is', 'that', 'so?']);
-    assert.strictEqual(used.size, 1)
-    assert.strictEqual(used.get("foo"), 1);
+    assert.deepStrictEqual(getInLastUsedForTesting("foo"), "1");
 
     assert.deepStrictEqual(
-        applyPattern(PATTERNS[0], [['A'], ['B']], used),
+        applyPattern(PATTERNS[0], [['A'], ['B']]),
         ['why', 'A', 'and', 'not', 'B']);
-    assert.strictEqual(used.size, 1)
-    assert.strictEqual(used.get("foo"), 0);
+    assert.deepStrictEqual(getInLastUsedForTesting("foo"), "0");
 
     assert.deepStrictEqual(
-        applyPattern(PATTERNS[2], [['arg0'], ['arg1']], used),
+        applyPattern(PATTERNS[2], [['arg0'], ['arg1']]),
         ['what', 'about', 'arg1', '?']);
-    assert.strictEqual(used.size, 2)
-    assert.strictEqual(used.get("foo"), 0);
-    assert.strictEqual(used.get("bar"), 0);
+    assert.deepStrictEqual(getInLastUsedForTesting("foo"), "0");
+    assert.deepStrictEqual(getInLastUsedForTesting("bar"), "0");
+
+    clearLastUsedForTesting();
   });
 
   it('chatResponse', function() {
     const memory: string[][] = [];
-    const used = new Map<string, number>();
     assert.deepStrictEqual(
-        chatResponse(['arg0', 'my', 'foo', 'arg1'], used, memory, PATTERNS),
-        ['why', 'arg0', 'my', 'and', 'not', 'arg1']);
-    assert.strictEqual(used.size, 1)
-    assert.strictEqual(used.get("foo"), 0);
-    assert.strictEqual(memory.length, 0)
+        chatResponse(['arg0', 'my', 'foo', 'arg1'], memory, PATTERNS),
+        ['why', 'arg0', 'your', 'and', 'not', 'arg1']);
+    assert.deepStrictEqual(getInLastUsedForTesting("foo"), "0");
+    assert.deepStrictEqual(memory.length, 0);
 
     assert.deepStrictEqual(
-        chatResponse(['arg2', 'my', 'bar', 'arg3'], used, memory, PATTERNS),
+        chatResponse(['arg2', 'my', 'bar', 'arg3'], memory, PATTERNS),
         ['what', 'about', 'arg3', '?']);
-    assert.strictEqual(used.size, 3)
-    assert.strictEqual(used.get("bar"), 0);
-    assert.strictEqual(used.get("foo"), 0);
-    assert.strictEqual(used.get("my"), 0);
-    assert.strictEqual(memory.length, 1)
+    assert.deepStrictEqual(getInLastUsedForTesting("bar"), "0");
+    assert.deepStrictEqual(getInLastUsedForTesting("foo"), "0");
+    assert.deepStrictEqual(getInLastUsedForTesting("my"), "0");
+    assert.deepStrictEqual(memory.length, 1);
 
     assert.deepStrictEqual(
-        chatResponse(['arg4', 'foo', 'arg5'], used, memory, PATTERNS),
+        chatResponse(['arg4', 'foo', 'arg5'], memory, PATTERNS),
         ['arg4', ',', 'is', 'that', 'so?']);
-    assert.strictEqual(used.size, 3)
-    assert.strictEqual(used.get("bar"), 0);
-    assert.strictEqual(used.get("foo"), 1);
-    assert.strictEqual(used.get("my"), 0);
-    assert.strictEqual(memory.length, 1)
+    assert.deepStrictEqual(getInLastUsedForTesting("bar"), "0");
+    assert.deepStrictEqual(getInLastUsedForTesting("foo"), "1");
+    assert.deepStrictEqual(getInLastUsedForTesting("my"), "0");
+    assert.deepStrictEqual(memory.length, 1);
 
     assert.deepStrictEqual(
-        chatResponse(['arg5', 'baz', 'arg6'], used, memory, PATTERNS),
+        chatResponse(['arg5', 'baz', 'arg6'], memory, PATTERNS),
         ['talk', 'more', 'about', 'your', 'bar', 'arg3']);
-    assert.strictEqual(used.size, 3);
-    assert.strictEqual(used.get("bar"), 0);
-    assert.strictEqual(used.get("foo"), 1);
-    assert.strictEqual(used.get("my"), 0);
-    assert.strictEqual(memory.length, 0)
+    assert.deepStrictEqual(getInLastUsedForTesting("bar"), "0");
+    assert.deepStrictEqual(getInLastUsedForTesting("foo"), "1");
+    assert.deepStrictEqual(getInLastUsedForTesting("my"), "0");
+    assert.deepStrictEqual(memory.length, 0);
 
     assert.deepStrictEqual(
-        chatResponse(['arg2', 'baz', 'arg3'], used, memory, PATTERNS),
+        chatResponse(['arg2', 'baz', 'arg3'], memory, PATTERNS),
         ["I'm", "not", "sure", "I", "understand", "you", "fully", "."]);
-    assert.strictEqual(used.size, 4);
-    assert.strictEqual(used.get(".none"), 0);
-    assert.strictEqual(used.get("bar"), 0);
-    assert.strictEqual(used.get("foo"), 1);
-    assert.strictEqual(used.get("my"), 0);
-    assert.strictEqual(memory.length, 0)
+    assert.deepStrictEqual(getInLastUsedForTesting(".none"), "0");
+    assert.deepStrictEqual(getInLastUsedForTesting("bar"), "0");
+    assert.deepStrictEqual(getInLastUsedForTesting("foo"), "1");
+    assert.deepStrictEqual(getInLastUsedForTesting("my"), "0");
+    assert.deepStrictEqual(memory.length, 0);
+
+    clearLastUsedForTesting();
   });
 
   it('assemble', function() {

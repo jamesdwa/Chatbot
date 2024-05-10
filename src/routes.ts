@@ -1,22 +1,18 @@
 import { Request, Response } from "express";
 import { ParamsDictionary } from "express-serve-static-core";
-import { splitWords, joinWords } from './words';
+import { splitWords, toString } from './words';
 import { PATTERNS } from "./patterns";
 import { chatResponse } from "./chatbot";
-
 
 // Require type checking of request body.
 type SafeRequest = Request<ParamsDictionary, {}, Record<string, unknown>>;
 type SafeResponse = Response;  // only writing, so no need to check
 
-
-// Keep track of the most recently used response for each pattern.
-const lastUsed: Map<string, number> = new Map<string, number>();
-
 // Keep track of possible responses for when we run out of things to say.
 const memory: string[][] = [];
 
-// TODO(6a): declare a Map to record transcripts
+// TODO: create a new mutable map constant to store transcripts by 
+//       calling the correct factory
 
 
 /**
@@ -31,8 +27,8 @@ export const chat = (req: SafeRequest, res: SafeResponse): void => {
   }
 
   const words = splitWords(msg);
-  const result = chatResponse(words, lastUsed, memory, PATTERNS);
-  res.send({response: joinWords(result)});
+  const result = chatResponse(words, memory, PATTERNS);
+  res.send({response: toString(result)});
 }
 
 /** Handles request for /save by storing the given transcript. */
@@ -49,21 +45,25 @@ export const save = (req: SafeRequest, res: SafeResponse): void => {
     return;
   }
 
-  // TODO(6a): implement this part
+  // TODO(5a): implement this part 
   //  - store the passed in value in the map under the given name
   //  - return a record indicating whether that replaced an existing transcript
-  res.send({replaced: false});  // TODO(6a): replace
+
+  res.send({replaced: false});  // TODO(5a): replace 
 }
 
 /** Handles request for /load by returning the transcript requested. */
 export const load = (req: SafeRequest, res: SafeResponse): void => {
-  // TODO(6b): implement this function
+  // TODO(5b): implement this function
+  //  - chat() & save() functions may be useful examples for error checking!
 }
 
-
-/** Used in tests to set the transcripts map back to empty. */
+/** 
+ * Used in tests to set the transcripts map back to empty. 
+ * (exported ONLY for testing)
+ */
 export const resetTranscriptsForTesting = (): void => {
-  // TODO(6a): remove all saved transcripts from the map
+  // TODO(): implement this function
 };
 
 
