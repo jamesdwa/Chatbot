@@ -21,9 +21,12 @@ export const substitute = (words: string[], reps: AssocList<string>): void => {
  * @param words initial array of words
  * @param replacements map from strings to their replacements
  * @returns concat(replace(words, replacement))
+ *     where replace([], M) = []
+ *           replace(L ++ [w], M) = replace(L, M) ++ [get-value(w, M)] if contains-key(w, M)
+ *           replace(L ++ [w], M) = replace(L, M) ++ [[w]] if !contains-key(w, M)
  *     where concat([]) = []
- *           concat(L @ [[]]) = concat(L)
- *           concat(L @ [S @ [w]]) = concat(L @ [S]) @ [w]
+ *           concat(L ++ [[]]) = concat(L)
+ *           concat(L ++ [S ++ [w]]) = concat(L ++ [S]) ++ [w]
  */
 export const replaceWords =
     (words: ReadonlyArray<string>,
