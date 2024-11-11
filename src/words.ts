@@ -6,13 +6,29 @@ const DEBUG: boolean = true;  // turn this to 'false' later if you want to preve
 // complete, to avoid running expensive invariant checks when the project is released.
 
 /** TODO: (part 1a) write the specification */
+
+/**
+ * Mutates the given array of words by substituting each word in the array
+ * with its corresponding value in the association list. If a word does not exist
+ * in the association list, it remains unchanged.
+ *
+ * @param words - The array of words to be substituted.
+ * @param reps - The association list of words and their replacements.
+ * @returns void - The function mutates the input array and does not return anything.
+ */
 export const substitute = (words: string[], reps: AssocList<string>): void => {
   let j = 0;
 
   // Inv: words = substitute(words_0[0 .. j-1]) ++ words_0[j .. n-1]
-  // while () { // TODO (1b): Fill in loop body according to above invariant
-
-  // }
+  while (j < words.length) { // TODO (1b): Fill in loop body according to above invariant
+    if (contains_key(words[j], reps)){
+      const word = get_value(words[j], reps);
+      if (word !== undefined){
+        words[j] = word;
+      }
+    }
+    j = j + 1;
+  }
 };
 
 /**
@@ -89,8 +105,8 @@ const isPunct = (ch: string): boolean => {
  *     4. each word is either a single punctuation character or 1+ letters
  */
 export const splitWords = (str: string): string[] => {
-  let splits: number[] = [];  // TODO (part 3a): fix this
-  let j: number = 9;          // TODO (part 3a): fix this
+  let splits: number[] = [0];  // TODO (part 3a): fix this
+  let j: number = 0;          // TODO (part 3a): fix this
 
   CheckInv1(splits, str, j);
 
@@ -99,9 +115,23 @@ export const splitWords = (str: string): string[] => {
   //         str[splits[i] ..  splits[i+1]-1] is all letters
   //      3. for i = 1 .. n-2, splits[i] is not between two letters
   //  where n = splits.length
-  while (j !== 9) {  // TODO (part 3a): fix this loop condition
+  while (j !== str.length) {  // TODO (part 3a): fix this loop condition
     // TODO (part 3a): implement loop body here
+    if (j === 0) {
+      splits.push(j + 1);
+    } else if (str[j] === " ") {
+      splits.push(j + 1);
+    } else if(str[j - 1] === " "){
+      splits.push(j + 1);
+    }else if (isPunct(str[j])) {
+      splits.push(j + 1);
+    } else if(isPunct(str[j - 1])){
+      splits.push(j + 1);
+    } else {
+      splits[splits.length - 1] = j + 1;
+    }
 
+    j = j + 1;
     CheckInv1(splits, str, j);
   }
 
@@ -121,7 +151,7 @@ export const splitWords = (str: string): string[] => {
 
   // Post: join(words) = del-space(str), each punctuation is its own word,
   //       adjacent letters are in the same word, and no word has spaces
-  return words; 
+  return words;
 };
 
 // Verify that the invariant from the first loop of splitWords holds.

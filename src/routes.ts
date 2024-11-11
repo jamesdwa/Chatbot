@@ -3,6 +3,7 @@ import { ParamsDictionary } from "express-serve-static-core";
 import { splitWords, toString } from './words';
 import { PATTERNS } from "./patterns";
 import { chatResponse } from "./chatbot";
+import { makeMutableMap, MutableMap } from './map';
 
 // Require type checking of request body.
 type SafeRequest = Request<ParamsDictionary, {}, Record<string, unknown>>;
@@ -13,7 +14,7 @@ const memory: string[][] = [];
 
 // TODO: create a new mutable map constant to store transcripts by 
 //       calling the correct factory
-
+const transcripts: MutableMap<string> = makeMutableMap();
 
 /**
  * Handles request for /chat, with a message included as a query parameter,
@@ -34,13 +35,13 @@ export const chat = (req: SafeRequest, res: SafeResponse): void => {
 /** Handles request for /save by storing the given transcript. */
 export const save = (req: SafeRequest, res: SafeResponse): void => {
   const name = req.body.name;
-  if (name === undefined || typeof name !== 'string') {
+  if (name === undefined || typeof name !== 'string' || name === null || Object.keys(name).length === 0) {
     res.status(400).send('required argument "name" was missing');
     return;
   }
 
   const value = req.body.value;
-  if (value === undefined) {
+  if (value === undefined || typeof value !== 'string' || value === null || Object.keys(value).length === 0) {
     res.status(400).send('required argument "value" was missing');
     return;
   }
@@ -48,14 +49,28 @@ export const save = (req: SafeRequest, res: SafeResponse): void => {
   // TODO(5a): implement this part 
   //  - store the passed in value in the map under the given name
   //  - return a record indicating whether that replaced an existing transcript
+  const replaced = transcripts.setValue(name, value);
 
-  res.send({replaced: false});  // TODO(5a): replace 
+  res.send({replaced: replaced});  // TODO(5a): replace 
 }
 
 /** Handles request for /load by returning the transcript requested. */
 export const load = (req: SafeRequest, res: SafeResponse): void => {
   // TODO(5b): implement this function
   //  - chat() & save() functions may be useful examples for error checking!
+  const name = first(req.query.name);
+  if (name === undefined || typeof name !== 'string') {
+    res.status(400).send('required query parameter "name" was missing');
+    return;
+  }
+
+  const transcript = transcripts.getValue(name);
+  if (transcript === undefined) {
+    res.status(404).send(`no transcript found with name "${name}"`);
+    return;
+  }
+
+  res.send({value: transcript});
 }
 
 /** 
@@ -64,6 +79,7 @@ export const load = (req: SafeRequest, res: SafeResponse): void => {
  */
 export const resetTranscriptsForTesting = (): void => {
   // TODO(): implement this function
+  transcripts.clear();
 };
 
 

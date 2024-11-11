@@ -106,6 +106,21 @@ describe('routes', function() {
     // - You should write tests using our usual branching heuristics (including
     //   all error case branches)
 
+    // Test for load function when name is not provided
+    let loadReq = httpMocks.createRequest({method: 'GET', url: '/load'});
+    let loadRes = httpMocks.createResponse();
+    load(loadReq, loadRes);
+    assert.deepStrictEqual(loadRes._getStatusCode(), 400);
+    assert.deepStrictEqual(loadRes._getData(), 'required query parameter "name" was missing');
+    resetTranscriptsForTesting();
+
+    // Test for load function when name does not exist
+    loadReq = httpMocks.createRequest({method: 'GET', url: '/load', query: {name: "non-existing"}});
+    loadRes = httpMocks.createResponse();
+    load(loadReq, loadRes);
+    assert.deepStrictEqual(loadRes._getStatusCode(), 404);
+    assert.deepStrictEqual(loadRes._getData(), 'no transcript found with name "non-existing"');
+    resetTranscriptsForTesting();
 
     // Example test:
     // First need to save something in order to load it
@@ -114,9 +129,9 @@ describe('routes', function() {
     const saveResp = httpMocks.createResponse();
     save(saveReq, saveResp);
     // Now we can actually (mock a) request to load the transcript
-    const loadReq = httpMocks.createRequest(
+    loadReq = httpMocks.createRequest(
         {method: 'GET', url: '/load', query: {name: "key"}});
-    const loadRes = httpMocks.createResponse();
+    loadRes = httpMocks.createResponse();
     load(loadReq, loadRes);
     // Validate that both the status code and the output is as expected
     assert.deepStrictEqual(loadRes._getStatusCode(), 200);

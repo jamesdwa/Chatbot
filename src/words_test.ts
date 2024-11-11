@@ -8,7 +8,7 @@ describe('words', function() {
 
   it('substitute', function() {
     const map: AssocList<string> = explode_array([["a", "b"], ["c", "d"]]);
-    const words: string[] = ["a"];
+    let words: string[] = ["a"];
 
     // Example test:
     // Notice how we mutate 'words' here rather than returning a result,
@@ -16,8 +16,28 @@ describe('words', function() {
     substitute(words, map);
     assert.deepStrictEqual(words, ["b"]);
 
-    
+  
     // Feel free to add tests here, but you won't have to turn them in
+    words = ["a"];
+    substitute(words, map);
+    assert.deepStrictEqual(words, ["b"]);
+
+    words = ["a", "c"];
+    substitute(words, map);
+    assert.deepStrictEqual(words, ["b", "d"]);
+
+    words = ["e", "f"];
+    substitute(words, map);
+    assert.deepStrictEqual(words, ["e", "f"]);
+
+    words = [];
+    substitute(words, map);
+    assert.deepStrictEqual(words, []);
+
+    words = ["a", "c"];
+    const emptyMap: AssocList<string> = explode_array([]);
+    substitute(words, emptyMap);
+    assert.deepStrictEqual(words, ["a", "c"]);
   });
 
   it('replaceWords', function() {

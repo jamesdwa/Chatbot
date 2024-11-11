@@ -1,14 +1,15 @@
 import { replaceWords, wordsContain } from './words';
 import { WordPattern } from './patterns'
-import { AssocList, contains_key, get_value } from './assoc';
-import { explode_array, nil, cons } from './list';
+import { AssocList } from './assoc';
+import { explode_array } from './list';
+import { makeMutableMap, MutableMap } from './map';
 
 // TODO: for every instance of "TODO: update" in this file, replace the
 // following line with a call to LastUsed.X, where X is the method of your
 // mutable map ADT with the same behavior
 
 // TODO: update to use your mutable map ADT by calling  factory function
-let LastUsed: AssocList<string> = nil;
+let LastUsed: MutableMap<string> = makeMutableMap();
 
 /**
  * Gets the value for the given key in LastUsed 
@@ -18,7 +19,7 @@ let LastUsed: AssocList<string> = nil;
  */
 export const getInLastUsedForTesting = (key: string): unknown => {
   // TODO: update
-  return get_value(key, LastUsed);
+  return LastUsed.getValue(key);
 }
 
 /**
@@ -27,7 +28,7 @@ export const getInLastUsedForTesting = (key: string): unknown => {
  */
 export const clearLastUsedForTesting = (): void => {
   // TODO: update
-  LastUsed = nil;
+  LastUsed.clear();
 }
 
 
@@ -183,20 +184,20 @@ export const applyPattern =
     string[] => {
   let result: string[] = [];
   // TODO: update
-  if (contains_key(pat.name, LastUsed)) {
+  if (LastUsed.hasKey(pat.name)) {
     // TODO: update
-    const last = get_value(pat.name, LastUsed);
+    const last = LastUsed.getValue(pat.name);
     
     const next = (parseInt(String(last)) + 1) % pat.responses.length;
     result = assemble(pat.responses[next], args);
 
     // TODO: update
-    LastUsed = cons([pat.name, next + ""], LastUsed);
+    LastUsed.setValue(pat.name, next + "");
   } else {
     result = assemble(pat.responses[0], args);
 
     // TODO: update
-    LastUsed = cons([pat.name, "0"], LastUsed);
+    LastUsed.setValue(pat.name, "0");
   }
   return result;
 };
